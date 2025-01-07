@@ -5,6 +5,7 @@ from ultralytics import YOLO
 import json
 
 class MainWindow(QtWidgets.QMainWindow):
+
     def __init__(self):
         super().__init__()
         uic.loadUi("design.ui", self)
@@ -57,32 +58,6 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 self.label_preview.setText("Превью недоступно")
 
-    def update_preview(self, pixmap):
-        preview_size = self.label_preview.size()
-
-        image_width = pixmap.width()
-        image_height = pixmap.height()
-        label_width = preview_size.width()
-        label_height = preview_size.height()
-
-        scale_factor = min(label_width / image_width, label_height / image_height)
-
-        new_width = int(image_width * scale_factor)
-        new_height = int(image_height * scale_factor)
-
-        scaled_pixmap = pixmap.scaled(new_width, new_height, QtCore.Qt.KeepAspectRatio)
-
-        final_pixmap = QtGui.QPixmap(label_width, label_height)
-        final_pixmap.fill(QtCore.Qt.white)
-
-        painter = QtGui.QPainter(final_pixmap)
-        x_offset = (label_width - new_width) // 2
-        y_offset = (label_height - new_height) // 2
-        painter.drawPixmap(x_offset, y_offset, scaled_pixmap)
-        painter.end()
-
-        self.label_preview.setPixmap(final_pixmap)
-
     def update_preview_with_boxes(self, pixmap, image_file):
         # Create a QImage from the pixmap
         image = pixmap.toImage()
@@ -110,12 +85,26 @@ class MainWindow(QtWidgets.QMainWindow):
         pixmap_with_boxes = QtGui.QPixmap.fromImage(image)
 
         # Update the label to display the image with boxes
-        self.update_preview(pixmap_with_boxes)
+        #self.update_preview(pixmap_with_boxes)
 
-    def resizeEvent(self, event):
-        if self.last_pixmap:
-            self.update_preview(self.last_pixmap)
-        event.accept()
+        # Create a QGraphicsScene for the QGraphicsView
+        scene = QtWidgets.QGraphicsScene(self)
+
+        # Create a QGraphicsPixmapItem and add it to the scene
+        pixmap_item = QtWidgets.QGraphicsPixmapItem(pixmap_with_boxes)
+        scene.addItem(pixmap_item)
+
+        # Set the scene to the graphic_view
+        self.graphic_view.setScene(scene)
+
+        self.graphic_view.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.graphic_view.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+        self.graphic_view.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.graphic_view.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+
+        self.graphic_view.wheelEvent = self._zoom_graphic_view
+
+        #self.graphic_view.setRenderHint(QtGui.QPainter.Antialiasing)
 
     def process_gallery(self):
 
@@ -153,6 +142,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def show_about(self):
         QtWidgets.QMessageBox.information(self, "О программе", "Программа для поиска людей в изображениях.\nВерсия 0.1")
+
+    def _zoom_graphic_view(self, event):
+        zoom_in_factor = 1.15
+        zoom_out_factor = 1 / zoom_in_factor
+
+        if event.angleDelta().y() > 0:
+            zoom_factor = zoom_in_factor
+        else:
+            zoom_factor = zoom_out_factor
+
+        self.graphic_view.scale(zoom_factor, zoom_factor)
 
 
 app = QtWidgets.QApplication(sys.argv)

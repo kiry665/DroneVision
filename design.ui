@@ -21,26 +21,7 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QListView" name="listView_images"/>
-      <widget class="QLabel" name="label_preview">
-       <property name="minimumSize">
-        <size>
-         <width>300</width>
-         <height>400</height>
-        </size>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::StyledPanel</enum>
-       </property>
-       <property name="text">
-        <string>Превью</string>
-       </property>
-       <property name="scaledContents">
-        <bool>true</bool>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
+      <widget class="QGraphicsView" name="graphic_view"/>
      </widget>
     </item>
     <item>
