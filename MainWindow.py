@@ -11,6 +11,7 @@ class MainWindow(QtWidgets.QMainWindow):
         uic.loadUi("design.ui", self)
 
         self.actionSelectFolder.triggered.connect(self.select_folder)
+        self.actionCloseFolder.triggered.connect(self.close_folder)
         self.actionExit.triggered.connect(self.close)
         self.actionAbout.triggered.connect(self.show_about)
         self.btn_process_gallery.clicked.connect(self.process_gallery)
@@ -22,6 +23,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.last_pixmap = None
 
+        self.status_bar.showMessage("Папка не выбрана")
+
     def select_folder(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Выбрать папку")
         if folder:
@@ -32,6 +35,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.listView_images.setRootIndex(model.index(folder))
             self.model = model
 
+            self.status_bar.showMessage(folder)
+
             coords_file = os.path.join(folder, 'image_coords.json')
             if os.path.exists(coords_file):
                 with open(coords_file, 'r') as f:
@@ -40,6 +45,12 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 self.coords_data = {}
                 print("Не нашел файл image_coords.json")
+
+    def close_folder(self):
+        model = QtWidgets.QFileSystemModel()
+        self.listView_images.setModel(model)
+        self.model = model
+        self.status_bar.showMessage("Папка не выбрана")
 
     def display_preview(self, index):
         if hasattr(self, "model"):
@@ -54,9 +65,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.last_pixmap = pixmap  # Store the pixmap
                     self.update_preview_with_boxes(pixmap, image_file)
                 else:
-                    self.label_preview.setText("Ошибка загрузки изображения")
+                    self.status_bar.showMessage("Ошибка загрузки изображения")
             else:
-                self.label_preview.setText("Превью недоступно")
+                self.status_bar.showMessage("Превью недоступно")
 
     def update_preview_with_boxes(self, pixmap, image_file):
         # Create a QImage from the pixmap
